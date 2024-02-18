@@ -1,0 +1,12 @@
+.tags
+.DS_Store
+exploration/*.html
+exploration/*.csv
+exploration/*.webm
+exploration/*.mov
+
+**/.ipynb_checkpoints
+**/__pycache__
+logs
+exploration/*.pdf
+data
