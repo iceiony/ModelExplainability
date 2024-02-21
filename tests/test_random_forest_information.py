@@ -11,6 +11,7 @@ from sklearn.ensemble import RandomForestClassifier
 from imblearn.metrics import geometric_mean_score
 from sklearn.metrics import accuracy_score
 
+import mnist as mn
 import random_forest as rf
 
 
@@ -20,15 +21,15 @@ def test_can_extract_explanation_from_random_forest_type_models():
     train, test, labels, target = train_test_split(images, labels, test_size=0.2)
 
     classifier = RandomForestClassifier(n_estimators=100)
-    classifier.fit(train.reshape(-1, 28*28), labels)
+    classifier.fit(train.reshape(-1, 28 * 28), labels)
 
-    train_prediction = classifier.predict(train.reshape(-1, 28*28))
+    train_prediction = classifier.predict(train.reshape(-1, 28 * 28))
 
     #assert model can fit the data
     assert geometric_mean_score(labels, train_prediction) > 0.9
     assert accuracy_score(labels, train_prediction) > 0.9
 
-    test_prediction = classifier.predict(test.reshape(-1, 28*28))
+    test_prediction = classifier.predict(test.reshape(-1, 28 * 28))
     
     #assert model can predict on unseen data
     assert geometric_mean_score(target, test_prediction) > 0.9
@@ -75,3 +76,33 @@ def test_can_extract_explanation_from_random_forest_type_models():
 
     assert class_entropy.loc[label, 'sample_entropy'] < class_entropy.loc[predicted, 'sample_entropy'], \
         f'Expected {label} to have lower entropy than {predicted}, but got {class_entropy.loc[label, "sample_entropy"]} and {class_entropy.loc[predicted, "sample_entropy"]} instead'
+
+    feature_entropy = (
+        reason
+        .reset_index(drop = False)
+        .sort_values('sample_entropy', ascending = False)
+        .assign(
+            intensity = lambda x: np.abs(x['sample_entropy']) / np.abs(x['sample_entropy']).max(),
+
+            colour = lambda x: np.where(
+                x['operator'].apply(lambda y: y[0]) == '>', 
+                'red', 'blue'),
+
+            is_target_class = lambda x: x['predicted_class'] == label,  
+        )
+        .query('predicted_class == 3')
+    )
+
+    import matplotlib.pyplot as plt;plt.ion()
+
+    
+    plt.imshow(image.reshape(28, 28))
+    plt.imshow(np.zeros([28, 28]))
+    y, x = divmod(feature_entropy['feature'], 28)
+    plt.scatter(
+        x, y, 
+        c = feature_entropy['colour'],
+        alpha = feature_entropy['intensity'], 
+        s = 100, marker = 's'
+    )
+    plt.close()
