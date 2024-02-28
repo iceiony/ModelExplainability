@@ -79,8 +79,9 @@ def test_can_extract_explanation_from_random_forest_type_models():
 
     feature_entropy = (
         reason
-        .reset_index(drop = False)
-        .sort_values('sample_entropy', ascending = False)
+        .sort_values(['feature', 'sample_entropy'], ascending = [True, False])
+        .groupby( ['feature', 'predicted_class'])
+        .agg({ 'sample_entropy' : 'sum', 'operator' : 'first', 'value' : 'first'})
         .assign(
             intensity = lambda x: np.abs(x['sample_entropy']) / np.abs(x['sample_entropy']).max(),
 
@@ -88,14 +89,16 @@ def test_can_extract_explanation_from_random_forest_type_models():
                 x['operator'].apply(lambda y: y[0]) == '>', 
                 'red', 'blue'),
 
-            is_target_class = lambda x: x['predicted_class'] == label,  
+            is_predicted_class = lambda x: x.index.get_level_values('predicted_class') == predicted
         )
-        .query('predicted_class == 3')
+        .reset_index()
     )
+    feature_entropy.head(40)
 
     import matplotlib.pyplot as plt;plt.ion()
 
     
+    plt.figure(2)
     plt.imshow(image.reshape(28, 28))
     plt.imshow(np.zeros([28, 28]))
     y, x = divmod(feature_entropy['feature'], 28)
@@ -106,3 +109,9 @@ def test_can_extract_explanation_from_random_forest_type_models():
         s = 100, marker = 's'
     )
     plt.close()
+
+
+
+
+
+    

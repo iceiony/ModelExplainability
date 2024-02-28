@@ -147,14 +147,15 @@ def explain(classifier, record):
        
     numeric_entropy = pd.concat(numeric_entropy)
 
-    return (
-        numeric_entropy
-        #.query('feature == 350')
-        .sort_values(['feature', 'value'])
-        .groupby(['feature', 'predicted_class'])
-        .agg({
-            'sample_entropy' : 'sum',
-            'value' : lambda x: x.tolist(),
-            'operator' : lambda x: x.tolist()
-        })
-    )
+    return numeric_entropy[['feature', 'predicted_class', 'operator', 'value', 'sample_entropy']] 
+    #(
+    #    numeric_entropy
+    #    #.query('feature == 350')
+    #    .sort_values(['feature', 'value'])
+    #    .groupby(['feature', 'predicted_class'])
+    #    .agg({
+    #        'sample_entropy' : 'sum',
+    #        'value' : lambda x: x.tolist(),
+    #        'operator' : lambda x: x.tolist()
+    #    })
+    #)
